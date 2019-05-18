@@ -1,6 +1,48 @@
-Hello
+---
+title: "Shark Attacks are Rising"
+author: "Nadiya Klymenko, Trevor Smith"
+output: html_document
+---
+
+Introduction:
 
 
-testing
 
-1 2 3
+Required Tools:
+
+
+
+1. Getting Started
+  We need to first download the dataset that we are planning to analyze. You can find this dataset at https://www.kaggle.com/teajay/global-shark-attacks/version/7 
+  Filter out the reported part of the message. If it doesn't fit the format DAY-MONTH-YEAR we don't care about it and it is deleted from our information. 
+  
+  Remember to replace all of the blank data point with NA 
+```{r}
+library(tidyverse)
+
+shark_data <- read.csv(file="/Users/trevorsmith/Desktop/attacks.csv", na.strings=c("","NA"))
+
+aus_shark_data <- shark_data %>% 
+  filter(Country == "AUSTRALIA") %>%
+  separate(Date, into=c("Day","Month"),  "-") %>%
+  filter(Month == "Jan" | Month == "Feb" | Month == "Mar" | Month == "Apr" | Month == "May" | Month == "Jun" | Month == "Jul" | Month == "Aug" | Month == "Sep"
+         | Month == "Oct" | Month == "Nov" | Month == "Dec") %>% 
+  select(Month, Year, Type, Area, Activity, Injury, Fatal = Fatal..Y.N.)
+  
+aus_shark_data
+
+```
+  
+  
+  Month vs #Attacks
+  Activity vs #Attacks
+  Ml: Predict number of attacks in a month
+  HT: Does month impact # of attacks
+
+  
+  
+  
+  
+  
+  
+  
