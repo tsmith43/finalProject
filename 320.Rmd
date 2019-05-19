@@ -92,23 +92,22 @@ newData <- aus_shark_data %>%
   group_by(Country) %>%
   summarize(numOfAttacks = n()) %>%
   arrange(desc(numOfAttacks)) %>%
-  head() %>% 
-  summarize(lol = sum(numOfAttacks), numOfAttacks)
+  head()
 
-s <- newData$lol
+s <- sum(newData$numOfAttacks)
 
 face <- aus_shark_data %>%
   group_by(Year, Country) %>%
   filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
-  summarize(numOfAttacks =n()) %>%
-  ggplot(aes(x=Year, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ ., scales="free") + geom_smooth(method = lm, color = "pink")
+  summarize(attck =n()) %>%
+  ggplot(aes(x=Year, y=attck)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ ., scales="free") + geom_smooth(method = lm, color = "pink")
 
 
 f <- aus_shark_data %>%
   group_by(Year, Country) %>%
   filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
-  summarize(numOfAttacks = n()) %>%
-  ggplot(aes(x=Year, y=numOfAtttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink")
+  summarize(attack = n()) %>%
+  ggplot(aes(x=Year, y=attack/s)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink")
 
 face
 f
