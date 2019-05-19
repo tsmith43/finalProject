@@ -19,6 +19,7 @@ Required Tools:
   Remember to replace all of the blank data point with NA 
 ```{r}
 library(tidyverse)
+library(ggplot2)
 
 shark_data <- read.csv(file="/Users/trevorsmith/Desktop/attacks.csv", na.strings=c("","NA"))
 
@@ -29,8 +30,8 @@ aus_shark_data <- shark_data %>%
   
   select(Month, Year, Type, Country, Area, Activity, Injury, Fatal = Fatal..Y.N.)
   
-sum <- count(aus_shark_data)
-
+s <- nrow(aus_shark_data)
+s
 aus_shark_data
 
 ```
@@ -91,20 +92,32 @@ newData <- aus_shark_data %>%
   group_by(Country) %>%
   summarize(numOfAttacks = n()) %>%
   arrange(desc(numOfAttacks)) %>%
-  head() 
+  head() %>% 
+  summarize(lol = sum(numOfAttacks), numOfAttacks)
 
-newData
+s <- newData$lol
 
 face <- aus_shark_data %>%
   group_by(Year, Country) %>%
   filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
+  summarize(numOfAttacks =n()) %>%
+  ggplot(aes(x=Year, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ ., scales="free") + geom_smooth(method = lm, color = "pink")
+
+
+f <- aus_shark_data %>%
+  group_by(Year, Country) %>%
+  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
   summarize(numOfAttacks = n()) %>%
-  ggplot(aes(x=Year, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue") + facet_grid(Country ~ . ) + geom_smooth(method = lm, color = "pink")
+  ggplot(aes(x=Year, y=numOfAtttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink")
 
 face
-
+f
 ```
   
+  
+  
+  
+  Need to make the data easier to read 
   
   
   
