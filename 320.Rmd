@@ -23,22 +23,135 @@ library(tidyverse)
 shark_data <- read.csv(file="/Users/trevorsmith/Desktop/attacks.csv", na.strings=c("","NA"))
 
 aus_shark_data <- shark_data %>% 
-  filter(Country == "AUSTRALIA") %>%
   separate(Date, into=c("Day","Month"),  "-") %>%
   filter(Month == "Jan" | Month == "Feb" | Month == "Mar" | Month == "Apr" | Month == "May" | Month == "Jun" | Month == "Jul" | Month == "Aug" | Month == "Sep"
-         | Month == "Oct" | Month == "Nov" | Month == "Dec") %>% 
-  select(Month, Year, Type, Area, Activity, Injury, Fatal = Fatal..Y.N.)
+         | Month == "Oct" | Month == "Nov" | Month == "Dec", Year >= 1900, Year < 2018) %>% 
   
+  select(Month, Year, Type, Country, Area, Activity, Injury, Fatal = Fatal..Y.N.)
+  
+sum <- count(aus_shark_data)
+
 aus_shark_data
 
 ```
   
+
+
+```{r}
+months <- aus_shark_data %>%
+  group_by(Year) %>%
+  summarize(numOfAttacks = n()) %>%
+  ggplot(aes(x=Year, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue") 
+
+months
+```
   
-  Month vs #Attacks
+  
+  
+  
+  
+```{r}
+months <- aus_shark_data %>%
+  group_by(Month) %>%
+  summarize(numOfAttacks = n()) %>%
+  arrange(desc(Month)) %>%
+  ggplot(aes(x=Month, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue") 
+
+
+
+months
+```
+  
   Activity vs #Attacks
   Ml: Predict number of attacks in a month
   HT: Does month impact # of attacks
 
+  
+  
+```{r}
+testing_data <- aus_shark_data %>% 
+  group_by(Activity)
+# To get the number of flights per day
+
+test <- summarize(testing_data, num = n()) %>%
+  arrange(desc(num)) %>%
+  filter( num >= 250) %>% 
+  mutate(Activity=replace(Activity, is.na(Activity), "Unknown")) %>%
+  ggplot(aes(x = Activity, y = num)) + geom_bar(stat = "identity", fill = "red")
+
+test
+
+```
+  
+  
+  
+  
+```{r}
+newData <- aus_shark_data %>%
+  group_by(Country) %>%
+  summarize(numOfAttacks = n()) %>%
+  arrange(desc(numOfAttacks)) %>%
+  head() 
+
+newData
+
+face <- aus_shark_data %>%
+  group_by(Year, Country) %>%
+  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
+  summarize(numOfAttacks = n()) %>%
+  ggplot(aes(x=Year, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue") + facet_grid(Country ~ . ) + geom_smooth(method = lm, color = "pink")
+
+face
+
+```
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+```{r}
+
+std_month <- aus_shark_data %>%
+  group_by(Year, Month) %>%
+  summarize(number = n()) %>% 
+  group_by(Month) %>%
+  summarize(n = mean(number)) %>%
+  ggplot(aes(x=Month, y = sd(n))) + geom_point()
+
+avg_month <- aus_shark_data %>%
+  group_by(Year, Month) %>%
+  summarize(number = n()) %>%
+  group_by(Month) %>%
+  summarize(n = mean(number)) %>%
+  ggplot(aes(x=Month, y = n, group = 1), levels = month.abb) + geom_point() + geom_line() +  scale_x_discrete(limits = month.abb)
+
+
+
+
+avg_month
+
+```
+  
+  
+  
+  
+  
   
   
   
