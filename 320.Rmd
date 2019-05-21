@@ -5,54 +5,111 @@ output: html_document
 ---
 
 Introduction:
-
-
-
-Required Tools:
-
+In this report, we will be analyzing Shark Attack cases from 1900-2017. The original dataset includes information about if the shark attack was fatal, which activity thae person was doing when they got attacked as well as which country the attack was in. In this report we primarily focus on where the attack occurred as well as which activity was being demonstrated when the person was attacked. The purpose for this report is to give the public a better understanding of the activities that they should be careful of when visiting other countries as well as in their own home. A shark attack is dangerous and could potentially end someone's life. Being aware of what to be careful of with shark attacks is the first step to being safe. 
 
 
 1. Getting Started
   We need to first download the dataset that we are planning to analyze. You can find this dataset at https://www.kaggle.com/teajay/global-shark-attacks/version/7 
-  Filter out the reported part of the message. If it doesn't fit the format DAY-MONTH-YEAR we don't care about it and it is deleted from our information. 
-  
-  Remember to replace all of the blank data point with NA 
+ For the focus of this report, we are going to remove a lot of the original dataset that we find unnecessary. Below is the original dataset: 
+ 
 ```{r}
 library(tidyverse)
 library(ggplot2)
 
-shark_data <- read.csv(file="/Users/trevorsmith/Desktop/attacks.csv", na.strings=c("","NA"))
+original_data <- read.csv(file="/Users/trevorsmith/Desktop/attacks.csv", na.strings=c("","NA"))
 
-aus_shark_data <- shark_data %>% 
-  separate(Date, into=c("Day","Month"),  "-") %>%
-  filter(Month == "Jan" | Month == "Feb" | Month == "Mar" | Month == "Apr" | Month == "May" | Month == "Jun" | Month == "Jul" | Month == "Aug" | Month == "Sep"
-         | Month == "Oct" | Month == "Nov" | Month == "Dec", Year >= 1900, Year < 2018) %>% 
-  
-  select(Month, Year, Type, Country, Area, Activity, Injury, Fatal = Fatal..Y.N.)
-  
-s <- nrow(aus_shark_data)
-s
-aus_shark_data
+original_data
+```
+ 
+Now below is our updated dataset. We decided to split the case number into separate columns in order to extract the year and month to be used for further analysis. At first thought we split the data based on the actual date parameter. But, since there was a lot of variation amongst that column we ended up losing a lot of data points. So to prevent loss of data, we broke up the information from the Case number tab. We also kept the type of attack, the country as well as the activity found below. This dataset will be what we use for the report. 
+ 
+```{r}
+shark_data <- original_data %>% 
+  separate(Case.Number, into=c("Year2", "Month", "Day"),  sep = "[.]", extra = "drop") %>%
+  filter (!is.na(Day)) %>%
+  filter (Year > 1900, Year < 2018) %>%
+  select(Year = Year2, Month, Type, Country, Area, Activity, Injury, Fatal = Fatal..Y.N.) %>%
+  arrange(Year)
 
+shark_data<-shark_data[!(shark_data$Year=="1851" & shark_data$Month =="12"),]
+shark_data <- shark_data[!(shark_data$Year=="1962,08"),]
+shark_data$Year <- as.numeric(shark_data$Year)
+
+total_attacks <- nrow(shark_data)
+
+shark_data
 ```
   
 
 
+2. Number of Attacks per year:
+
+We begin our analysis by looking at the trend that time has on the number of shark attacks per year. Found below is the graph that we can use to observe how the number of attacks increase as time increases. The way we do this is by first grouping our information based on the year that it is in. By grouping it with year, we're putting all of the attacks for a given year into a group so that we can then use the n() function to count the number of values for each year that we have. After we find these values, we can place them into a ggplot of a bar graph to get a histogram of the number of attacks for each year. As you can tell from our graph below, the number of attacks each year is consistently increasing. Is there a cause for this increase? Let's further look into what could be causing this issue. 
+
 ```{r}
-months <- aus_shark_data %>%
+attacksPerYear <- shark_data %>%
   group_by(Year) %>%
   summarize(numOfAttacks = n()) %>%
-  ggplot(aes(x=Year, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue") 
+  ggplot(aes(x=Year, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue") + 
+    labs(title = "Total Number of Attacks Over Time", x = "Year", y = "Attacks That Year") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) + scale_x_continuous(breaks=seq(1900, 2017, 9))
 
-months
+attacksPerYear
+```
+  
+  
+3. One country more than another?
+```{r}
+attac <- shark_data %>%
+  group_by(Country) %>%
+  summarize(attacks = n()) %>%
+  arrange(desc(attacks))%>%
+  head() %>%
+  ggplot(aes(x=Country, y=attacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")
+
+
+attac
+```
+  
+```{r}
+newData <- aus_shark_data %>%
+  group_by(Country) %>%
+  summarize(numOfAttacks = n()) %>%
+  arrange(desc(numOfAttacks)) %>%
+  head()
+
+newData
+
+face <- aus_shark_data %>%
+  group_by(Year, Country) %>%
+  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
+  summarize(attck = n()) %>%
+  ggplot(aes(x=Year, y=attck)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ ., scales="free") + geom_smooth(method = lm, color = "pink")
+
+
+f <- aus_shark_data %>%
+  group_by(Year, Country) %>%
+  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
+  summarize(attack = n()) %>%
+  mutate(totalValue = (Country == "USA")*1946 + 1096 * (Country == "AUSTRALIA") + 497 *(Country == "SOUTH AFRICA") + 98 * (Country == "BRAZIL") + 
+           87 * (Country == "NEW ZEALAND") + 84 * (Country =="BAHAMAS")) %>%
+  ggplot(aes(x=Year, y=attack/totalValue)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink")
+
+face # This is the graph we get after we just compare 
+f #This is the graph we get afteer dividing the year by the total number of attacks for a given country
 ```
   
   
   
   
-  
+4. Why is the USA so high? Mean # of attacks, SD 
+
+5. What month is the highest number of attacks in the USA? 
+
+
 ```{r}
 months <- aus_shark_data %>%
+  filter(Country == "USA") %>%
   group_by(Month) %>%
   summarize(numOfAttacks = n()) %>%
   arrange(desc(Month)) %>%
@@ -63,21 +120,18 @@ months <- aus_shark_data %>%
 months
 ```
   
-  Activity vs #Attacks
-  Ml: Predict number of attacks in a month
-  HT: Does month impact # of attacks
 
-  
-  
+6. Which activity in the USA is the highest? 
 ```{r}
 testing_data <- aus_shark_data %>% 
   group_by(Activity)
-# To get the number of flights per day
 
-test <- summarize(testing_data, num = n()) %>%
+test <- testing_data %>%
+  filter(Country =="USA") %>%
+  summarize(num = n()) %>%
   arrange(desc(num)) %>%
-  filter( num >= 250) %>% 
-  mutate(Activity=replace(Activity, is.na(Activity), "Unknown")) %>%
+  mutate(Activity=replace(Activity, is.na(Activity), "Unknown")) %>% 
+  head() %>%
   ggplot(aes(x = Activity, y = num)) + geom_bar(stat = "identity", fill = "red")
 
 test
@@ -85,41 +139,29 @@ test
 ```
   
   
-  
-  
+
+7. Is this activity a huge issue in other countries?
 ```{r}
-newData <- aus_shark_data %>%
-  group_by(Country) %>%
-  summarize(numOfAttacks = n()) %>%
-  arrange(desc(numOfAttacks)) %>%
-  head()
 
-s <- sum(newData$numOfAttacks)
-
-face <- aus_shark_data %>%
-  group_by(Year, Country) %>%
+dots <- aus_shark_data %>%
   filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
-  summarize(attck =n()) %>%
-  ggplot(aes(x=Year, y=attck)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ ., scales="free") + geom_smooth(method = lm, color = "pink")
+  filter(Activity == "Surfing" | Activity == "Swimming" | Activity == "Unknown" | Activity == "Wading" | Activity == "Fishing" | Activity == "Standing") %>%
+  ggplot(aes(x=Year,y=Activity, color = Country)) + geom_point()
 
+dots
 
-f <- aus_shark_data %>%
-  group_by(Year, Country) %>%
-  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
-  summarize(attack = n()) %>%
-  ggplot(aes(x=Year, y=attack/s)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink")
-
-face
-f
 ```
+
+
   
   
   
+  Activity vs #Attacks
+  Ml: Predict number of attacks in a month
+  HT: Does month impact # of attacks
+
   
-  Need to make the data easier to read 
-  
-  
-  
+
   
   
   
