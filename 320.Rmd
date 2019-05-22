@@ -25,7 +25,7 @@ original_data
  
 Now below is our updated dataset. We decided to split the case number into separate columns in order to extract the year and month to be used for further analysis. At first thought we split the data based on the actual date parameter. But, since there was a lot of variation amongst that column we ended up losing a lot of data points. So to prevent loss of data, we broke up the information from the Case number tab. We also kept the type of attack, the country as well as the activity found below. This dataset will be what we use for the report. 
  
-```{r, echo = false}
+```{r, echo = FALSE}
 shark_data <- original_data %>% 
   separate(Case.Number, into=c("Year2", "Month", "Day"),  sep = "[.]", extra = "drop") %>%
   filter (!is.na(Day)) %>%
@@ -39,7 +39,7 @@ shark_data$Year <- as.numeric(shark_data$Year)
 
 total_attacks <- nrow(shark_data)
 
-shark_data
+head(shark_data)
 ```
   
 
@@ -75,9 +75,23 @@ countryTotals <- shark_data %>%
 countryTotals
 ```
   
-  Looking at this graph we can tell that the USA has the largest number of attacks compared to Australia and South Africa. But this huge difference could purely be based on the population differences between the 6 countries. So to combat this, we can look at the different graphs individually as they progress through time. In the graph below we can see the different graphs as time progresses. We notice with the first graph that is generally difficult to compare the 6 countries. To fix this, how about we change the scaling for each of the different countries. Changing this scaling helps us see the the actualy increase and change throughout time. We notice that with each country there is a positive correlation between time and the number of attacks. What could be causing this issue? It looks as though the USA has the strongest correlation, with the steepest slope. Let's talk more about why the USA might have this steep slope. 
+Looking at this graph we can tell that the USA has the largest number of attacks compared to Australia and South Africa. But this huge difference could purely be based on the population differences between the 6 countries. So to combat this, we can look at the different graphs individually as they progress through time. In the graph below we can see the different graphs as time progresses. We notice with the first graph that is generally difficult to compare the 6 countries. To fix this, how about we change the scaling for each of the different countries. Changing this scaling helps us see the the actualy increase and change throughout time. We notice that with each country there is a positive correlation between time and the number of attacks. What could be causing this issue? It looks as though the USA has the strongest correlation, with the steepest slope. Let's talk more about why the USA might have this steep slope. 
 ```{r}
+countryThroughTime<- shark_data %>%
+  group_by(Year, Country) %>%
+  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "PAPA NEW GUINEA" | Country == "BAHAMAS") %>%
+  summarize(attacks = n()) %>%
+  ggplot(aes(x=Year, y=attacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink") + labs(title = "Number of Attacks throughout Time in 6 different countries", x = "Year", y ="Total number of Attacks")
 
+countryThroughTimeScaled<- shark_data %>%
+  group_by(Year, Country) %>%
+  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "PAPA NEW GUINEA" | Country == "BAHAMAS") %>%
+  summarize(attacks = n()) %>%
+  ggplot(aes(x=Year, y=attacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ ., scales="free") + geom_smooth(method = lm, color = "pink") + labs(title = "Number of Attacks throughout Time in 6 different countries", x = "Year", y ="Total number of Attacks")
+
+
+countryThroughTime
+countryThroughTimeScaled
 ```
   
     
@@ -108,48 +122,28 @@ activityAttacks
   
 
 6. Is this activity a huge issue in other countries?
+This graph shows us that throughout time, it seems as though swimming has been a consistent issue throughout time. We can tell that although Surfing is the largest issue in the USA, swimming has consistently been an issue throughout time. Even though the swimming has been consistent throughout the years, we can also tell from the bar graph below that surfing is still the number one activity that is done when someone is attacked. So this means that surfing must be an issue that has gotten more prevalent in recent years.
 ```{r}
+
+activityAttacksAllCountries <- shark_data %>%
+  group_by(Activity) %>%
+  summarize(num = n()) %>%
+  arrange(desc(num)) %>%
+  mutate(Activity=replace(Activity, is.na(Activity), "Unknown")) %>% 
+  head() %>%
+  ggplot(aes(x = Activity, y = num)) + geom_bar(stat = "identity", fill = "red") + geom_text(aes(label=num), position=position_dodge(width=0.9), vjust=-0.25) + labs(title ="Number of Attacks for a Given Activity in the World", x = "Activity", y = "Number of Attacks")
 
 dots <- shark_data%>%
   filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
   filter(Activity == "Surfing" | Activity == "Swimming" | Activity == "Unknown" | Activity == "Wading" | Activity == "Fishing" | Activity == "Standing") %>%
-  ggplot(aes(x=Year,y=Activity, color = Country)) + geom_point()
+  ggplot(aes(x=Year,y=Activity, color = Country)) + geom_point() + labs(title = "Attacks Throughout the Years based on Activity", x ="Years", y = "Activity when Attacked")
 
+activityAttacksAllCountries
 dots
-
 ```
+  We also notice while looking at the bar plot above that the total number of surfing attacks in the world is 952. This is very close to the number of surfing attacks in the USA which we found to be 559 attacks. Does this mean that surfing is as big of an issue in the world as it is in the USA?
+  
+  We begin to analyze the effect that surfing has in a given country. We can find this effect by finding the proportional relationship between the number of surfing attacks for each country. Found below is a plot of those proportions.
 
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   
