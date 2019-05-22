@@ -7,32 +7,33 @@ output:
 ---
 
 Introduction:
-In this report, we will be analyzing Shark Attack cases from 1900-2017. The original dataset includes information about if the shark attack was fatal, which activity thae person was doing when they got attacked as well as which country the attack was in. In this report we primarily focus on where the attack occurred as well as which activity was being demonstrated when the person was attacked. The purpose for this report is to give the public a better understanding of the activities that they should be careful of when visiting other countries as well as in their own home. A shark attack is dangerous and could potentially end someone's life. Being aware of what to be careful of with shark attacks is the first step to being safe. 
+In this report, we will be analyzing Shark Attack cases from 1900-2017. The original dataset includes information about if the shark attack was fatal, which activity thae person was doing when they got attacked as well as which country the attack was in. In this report we primarily focus on where the attack occurred as well as which activity was being demonstrated when the person was attacked. The purpose for this report is to give the public a better understanding of the activities that they should be careful of when visiting other countries as well as in their own home. A shark attack is dangerous and could potentially end someone's life. Being aware of what to be careful of with shark attacks is the first step to being safe. According to this article https://www.cbsnews.com/news/great-white-sharks-coming-closer-to-shore-people/ sharks are starting to come closer to the shore. Knowing this, we need to knowledgable about which actvities will be more dangerous. 
 
 
 1. Getting Started
-  We need to first download the dataset that we are planning to analyze. You can find this dataset at https://www.kaggle.com/teajay/global-shark-attacks/version/7 
- For the focus of this report, we are going to remove a lot of the original dataset that we find unnecessary. 
- 
-```{r, include = FALSE}
+These are the libraries that we will be using for this project today:
+```{r}
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
+```
 
+We first download the dataset that we are planning to analyze. You can find this dataset at https://www.kaggle.com/teajay/global-shark-attacks/version/7 
+For the focus of this report, we are going to remove a lot of the original dataset that we find unnecessary. 
+ 
+```{r, include = FALSE}
 original_data <- read.csv(file="/Users/trevorsmith/Desktop/attacks.csv", na.strings=c("","NA"))
 #original_data <- read.csv(file="C:\\Users\\nad78\\Documents\\Nadia\\2018-2019College\\CMSC320\\shark_attacks\\attacks.csv", na.strings=c("","NA"))
-
-
-original_data
 ```
  
-Now below is our updated dataset. We decided to split the case number into separate columns in order to extract the year and month to be used for further analysis. At first thought we split the data based on the actual date parameter. But, since there was a lot of variation amongst that column we ended up losing a lot of data points. So to prevent loss of data, we broke up the information from the Case number tab. We also kept the type of attack, the country as well as the activity found below. This dataset will be what we use for the report. 
+Now below is our updated dataset. We decided to split the case number into separate columns in order to extract the year and month to be used for further analysis. We also decided to keep the country the attack was in as well as the activity the attack was in. At first thought we split the data based on the actual date parameter. But, since there was a lot of variation amongst that column we ended up losing a lot of data points. So to prevent loss of data, we broke up the information from the Case number tab using the separate function. You can read about the separate function here: https://www.rdocumentation.org/packages/tidyr/versions/0.8.3/topics/separate. We also decided to limit our data starting from 1900-2017, this gives us relevant information and is a large enough range that we might be able to see a trend later down the line. This dataset will be what we use for the report. 
  
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 shark_data <- original_data %>% 
   separate(Case.Number, into=c("Year2", "Month", "Day"),  sep = "[.]", extra = "drop") %>%
   filter (!is.na(Day)) %>%
   filter (Year > 1900, Year < 2018) %>%
-  select(Year = Year2, Month, Type, Country, Area, Activity, Injury, Fatal = Fatal..Y.N.) %>%
+  select(Year = Year2, Month, Country, Activity) %>%
   arrange(Year)
 
 shark_data<-shark_data[!(shark_data$Year=="1851" & shark_data$Month =="12"),]
@@ -45,10 +46,9 @@ head(shark_data)
 ```
   
 
-
 2. Number of Attacks per year:
 
-We begin our analysis by looking at the trend that time has on the number of shark attacks per year. Found below is the graph that we can use to observe how the number of attacks increase as time increases. The way we do this is by first grouping our information based on the year that it is in. By grouping it with year, we're putting all of the attacks for a given year into a group so that we can then use the n() function to count the number of values for each year that we have. After we find these values, we can place them into a ggplot of a bar graph to get a histogram of the number of attacks for each year. As you can tell from our graph below, the number of attacks each year is consistently increasing. Is there a cause for this increase? Let's further look into what could be causing this issue. 
+We begin our analysis by looking at the trend that time has on the number of shark attacks per year. Found below is the graph that we can use to observe how the number of attacks increase as time increases. The way we do this is by first grouping our information based on the year that it is in. By grouping it with year, we're putting all of the attacks for a given year into a group so that we can then use the n() function to count the number of values for each year that we have. Read more about the n() function here: https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/n. After we find these values, we can place them into a ggplot of a bar graph to get a histogram of the number of attacks for each year. As you can tell from our graph below, the number of attacks each year is consistently increasing. Is there a cause for this increase? Let's further look into what could be causing this issue. 
 
 ```{r}
 attacksPerYear <- shark_data %>%
@@ -63,7 +63,8 @@ attacksPerYear
   
   
 3. One country more than another?
-  We first question this increase by asking, is there one country that is increasing faster/more than any of the other countries? We notice below that these are the top 6 countries that have impacted the total number of shark attacks throughout the years. We see this graph by first grouping our data and counting the number of rows that a certain country has. This determines the total number of attacks that a country has. 
+We first question this increase by asking, is there one country that is increasing faster/more than any of the other countries? We notice below that these are the top 6 countries that have impacted the total number of shark attacks throughout the years. We see this graph by first grouping our data and counting the number of rows that a certain country has. This determines the total number of attacks that a country has. In order to add the plot we used the geom_bar function as well as the geom_text function to label each of the bars with the total number they are. You can read about those functions here: https://ggplot2.tidyverse.org/reference/geom_bar.html and here:
+https://ggplot2.tidyverse.org/reference/geom_text.html.
 
 ```{r}
 countryTotals <- shark_data %>%
@@ -77,7 +78,7 @@ countryTotals <- shark_data %>%
 countryTotals
 ```
   
-Looking at this graph we can tell that the USA has the largest number of attacks compared to Australia and South Africa. But this huge difference could purely be based on the population differences between the 6 countries. So to combat this, we can look at the different graphs individually as they progress through time. In the graph below we can see the different graphs as time progresses. We notice with the first graph that is generally difficult to compare the 6 countries. To fix this, how about we change the scaling for each of the different countries. Changing this scaling helps us see the the actualy increase and change throughout time. We notice that with each country there is a positive correlation between time and the number of attacks. What could be causing this issue? It looks as though the USA has the strongest correlation, with the steepest slope. Let's talk more about why the USA might have this steep slope. 
+Looking at this graph below we can tell that the USA has the largest number of attacks compared to Australia and South Africa. But this huge difference could purely be based on the population differences between the 6 countries. So to combat this, we can look at the different graphs individually as they progress through time. In the graph below we can see the different graphs as time progresses. We can see these different graphs by utilizing the facet_grid function from the ggplot library. We notice with the first graph that is generally difficult to compare the 6 countries. To fix this, how about we change the scaling for each of the different countries. Changing this scaling helps us see the actual increase and change throughout time. We notice that with each country there is a positive correlation between time and the number of attacks. What could be causing this increase? It looks as though the USA has the strongest correlation, with the steepest slope. Let's talk more about why the USA might have this steep slope. 
 ```{r}
 countryThroughTime<- shark_data %>%
   group_by(Year, Country) %>%
@@ -97,9 +98,9 @@ countryThroughTimeScaled
 ```
   
     
-4. Why is the USA so high? Mean # of attacks, SD, Analyze how time affects the USA. 
-Let's see if there is a relationship between time and number of shark attacks for USA. We'll do that by fitting a linear regression model to it, and testing if the relationship is statistically significant.
+4. Analysis on the USA
 
+Let's see if there is a relationship between time and number of shark attacks for USA. We'll do that by fitting a linear regression model to it, and testing if the relationship is statistically significant.
 ```{r}
 usa_data <- shark_data %>%
   filter(Country == "USA") %>%
@@ -111,12 +112,11 @@ usa_data
 usa_data_lm <- lm(attacks~Year, data=usa_data)
 broom::tidy(usa_data_lm)
 ```
-
 We see that on average, number of shark attacks increases by 44.99% every year.
 We can also reject the null hypothesis of there being no relationship between number of attacks and years, since the p-value is much less than alpha of .05.
 
-Let's visualize the linear regression by plotting the residuals vs years
 
+Let's visualize the linear regression by plotting the residuals vs years
 ```{r}
 usa_data_lm$Year=as.numeric(levels(usa_data_lm$Year))[usa_data_lm$Year]
 
@@ -129,14 +129,13 @@ broom::augment(usa_data_lm) %>%
  scale_x_continuous(breaks=seq(1900, 2017, 9))
 
 ```
-At seems that there is first a decreasing trend before 1970's which then becomes a steeply increasing trend thereafter. Let's look into what might be causing this trend.
+It seems that there is first a decreasing trend before 1970's which then becomes a steeply increasing trend thereafter. Let's look into what might be causing this trend.
 
 
 
-5. What is another potential cause in the large amount of attacks in the USA? Could it be based on the activity that was performed? 
-Which activity in the USA is the highest? 
+5. Activities effect on Shark Attacks
 
-As we can tell from above, we notice that time DOES OR DOES NOT have an impact on the number of attacks that we have in the country. Is there another aspect that might have a strong correlation to causing a huge increase in the number of attacks? Will the type of activity that you are doing cause an effect on the number of attacks caused? Does activity have a positive correlation to the number of incidents? Seen below is the graph for the top 6 Activities that have caused an attack in the USA. The highest number of attacks is found when someone is surfing in the USA. Let's dive deeper into the surfing activity.
+As we can tell from above, we notice that time does have an impact on the number of attacks that we have in the country. We also noticed that there was a sharp decrease in the residuals which turned into a steep increasing trend after. The cause of this could potentially be based around the type of activities that were popular during these time frames. So the question we need to ask is, will the type of activity that you are doing cause an effect on the number of attacks caused? Does activity have a positive correlation to the number of incidents? Seen below is the graph for the top 6 Activities that have caused an attack in the USA. The highest number of attacks is found when someone is surfing in the USA. Let's dive deeper into the different types of attacks. 
 ```{r}
 
 activityAttacks <- shark_data %>%
@@ -152,6 +151,8 @@ activityAttacks
 
 ```
   
+
+Similar to how we calculated the residuals above, we calculated the residuals based on the top 6 activities that we found within the USA. We did this by plotting the residuals just for the USA and then we colored those points based on the type of activity that caused that attack. We can notice that with this residual plot, as time progresses the different activities begin to have a lesser impact on the total number of attacks. Also, as time progresses we begin to see that surfing has become a very large issue in the USA. This makes sense, since our previous bar graph above says that surfing is the number one cause of sharrk attacks in the USA. So, looking at the residuals we can note that there is a strong relationship between surfing and the shark attacks in the USA.
 ```{r}
 usa_data <- shark_data %>%
   filter(Country == "USA") %>%
@@ -169,15 +170,15 @@ broom::augment(usa_data_lm) %>%
   left_join(usa_data, by = c("attacks","Year")) %>%
   ggplot(aes(x=Year, y = .resid, color = Activity)) +
     geom_point() +
-    labs(title = "Residuals of shark attacks over time",
+    labs(title = "Residuals of shark attacks over time in the USA",
        x = "Year",
        y = "Residual") +
  scale_x_continuous(breaks=seq(1900, 2017, 9))
 ```
 
-6. Is this activity a huge issue in other countries?
-This graph shows us that throughout time, it seems as though swimming has been a consistent issue throughout time. We can tell that although Surfing is the largest issue in the USA, swimming has consistently been an issue throughout time. Even though the swimming has been consistent throughout the years, we can also tell from the bar graph below that surfing is still the number one activity that is done when someone is attacked. So this means that surfing must be an issue that has gotten more prevalent in recent years.
+6. Is surfing a huge issue in other countries?
 
+Similar to above, we first found the total number of attacks for a given activity in the world. This helps us see that once again Surfing is a big issue not only in the USA but also in the world. Once again let's take a look at the effect that surfing and other activities has on the world throughout time. 
 ```{r}
 
 activityAttacksAllCountries <- shark_data %>%
@@ -190,15 +191,32 @@ activityAttacksAllCountries <- shark_data %>%
 activityAttacksAllCountries
 ```
 
- We also notice while looking at the bar plot above that the total number of surfing attacks in the world is 952. This is very close to the number of surfing attacks in the USA which we found to be 559 attacks. Does this mean that surfing is as big of an issue in the world as it is in the USA?
-
+ We also notice while looking at the bar plot above that the total number of surfing attacks in the world is 952. This is very close to the number of surfing attacks in the USA which we found to be 559 attacks. Does this mean that surfing is as big of an issue in the world as it is in the USA? Seen below we notice that based on the residual plot it does seem to be a strong issue. We first decide not to include the USA in our dataset, and then we do decide to include it in our residual data set. This was done just to make sure that the data was not being skewed by the information that the USA had. It is clear the USA is not causing this issue but that surfing is having a stronger impact on the number of shark attacks as time has progressed. 
+ 
 ```{r}
+main_countries_no_usa_data <- shark_data %>%
+ filter(Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
+  filter(Activity == "Surfing" | Activity == "Swimming" | Activity == "Unknown" | Activity == "Wading" | Activity == "Fishing" | Activity == "Standing") %>%
+  group_by(Year, Activity) %>%
+  summarize(attacks = n())
+
 main_countries_data <- shark_data %>%
  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
   filter(Activity == "Surfing" | Activity == "Swimming" | Activity == "Unknown" | Activity == "Wading" | Activity == "Fishing" | Activity == "Standing") %>%
   group_by(Year, Activity) %>%
   summarize(attacks = n())
 
+main_countries_no_usa_data_lm <- lm(attacks~Year, data = main_countries_no_usa_data)
+main_countries_no_usa_data_lm$Year = as.numeric(levels(main_countries_no_usa_data_lm$Year))[main_countries_no_usa_data_lm$Year]
+
+broom::augment(main_countries_no_usa_data_lm) %>%
+  left_join(main_countries_no_usa_data, by = c("attacks","Year")) %>%
+  ggplot(aes(x=Year, y = .resid, color = Activity)) +
+    geom_point() +
+    labs(title = "Residuals of shark attacks over time without the USA",
+       x = "Year",
+       y = "Residual") +
+ scale_x_continuous(breaks=seq(1900, 2017, 9))
 
 main_countries_data_lm <- lm(attacks~Year, data=main_countries_data)
 
@@ -214,7 +232,7 @@ broom::augment(main_countries_data_lm) %>%
  scale_x_continuous(breaks=seq(1900, 2017, 9))
 ```
 
-We see that the trend is very similar to what we have with the USA residuals, let's break it down by country to see how each country contributes.
+We see that the trend is very similar to what we have with the USA residuals, let's break it down by country to see how each country contributes. Looking at the graph below, we notice that as a countries population increases, the number of surfing incidents also increase. Since the USA is the largest of these countries, it seems to have the strongest relationship through time with the number of surfing incidents. The graphs below show us that although the USA has a strong relationship, there is also a growing relationship with surfing throughout the other countries. 
 
 ```{r}
 main_countries_data <- shark_data %>%
@@ -233,12 +251,19 @@ broom::augment(main_countries_data_lm) %>%
   left_join(main_countries_data, by = c("attacks","Year")) %>%
   ggplot(aes(x=Year, y = .resid, color = Activity)) +
     geom_point() +
-    labs(title = "Residuals of shark attacks over time",
+    labs(title = "Residuals of shark attacks over time for top Countries",
        x = "Year",
        y = "Residual") +
   scale_x_continuous(breaks=seq(1900, 2017, 50)) +
   facet_grid( . ~ Country)
 ```
+
+Conclusion:
+Being able to identify what has a strong relationship and cause with the number of shark attacks help people become aware of what to avoid and what to be careful of. As noted in the introduction, the article seems to be right with their analysis that sharks are beginning to come closer to the shore. With this increase in sharks at the shore we notice that shark attacks related to shore activities such as surfing and swimming are beginning to increase in a significant rate. We noticed above that time has a strong relationship with the increase in shark attacks, and we also noticed that surfing is also a big cause of shark attacks around the world. So no matter where you go, just remember that you can have fun surfing. But when you're surfing you need to be aware of the consequences that can be caused from doing it. 
+
+
+
+
 
   
   
