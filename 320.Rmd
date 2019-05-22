@@ -1,7 +1,9 @@
 ---
 title: "Shark Attacks are Rising"
 author: "Nadiya Klymenko, Trevor Smith"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 Introduction:
@@ -10,9 +12,9 @@ In this report, we will be analyzing Shark Attack cases from 1900-2017. The orig
 
 1. Getting Started
   We need to first download the dataset that we are planning to analyze. You can find this dataset at https://www.kaggle.com/teajay/global-shark-attacks/version/7 
- For the focus of this report, we are going to remove a lot of the original dataset that we find unnecessary. Below is the original dataset: 
+ For the focus of this report, we are going to remove a lot of the original dataset that we find unnecessary. 
  
-```{r}
+```{r, include = FALSE}
 library(tidyverse)
 library(ggplot2)
 
@@ -23,7 +25,7 @@ original_data
  
 Now below is our updated dataset. We decided to split the case number into separate columns in order to extract the year and month to be used for further analysis. At first thought we split the data based on the actual date parameter. But, since there was a lot of variation amongst that column we ended up losing a lot of data points. So to prevent loss of data, we broke up the information from the Case number tab. We also kept the type of attack, the country as well as the activity found below. This dataset will be what we use for the report. 
  
-```{r}
+```{r, echo = false}
 shark_data <- original_data %>% 
   separate(Case.Number, into=c("Year2", "Month", "Day"),  sep = "[.]", extra = "drop") %>%
   filter (!is.na(Day)) %>%
@@ -75,30 +77,17 @@ countryTotals
   
   Looking at this graph we can tell that the USA has the largest number of attacks compared to Australia and South Africa. But this huge difference could purely be based on the population differences between the 6 countries. So to combat this, we can look at the different graphs individually as they progress through time. In the graph below we can see the different graphs as time progresses. We notice with the first graph that is generally difficult to compare the 6 countries. To fix this, how about we change the scaling for each of the different countries. Changing this scaling helps us see the the actualy increase and change throughout time. We notice that with each country there is a positive correlation between time and the number of attacks. What could be causing this issue? It looks as though the USA has the strongest correlation, with the steepest slope. Let's talk more about why the USA might have this steep slope. 
 ```{r}
-countryThroughTime<- shark_data %>%
-  group_by(Year, Country) %>%
-  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "PAPA NEW GUINEA" | Country == "BAHAMAS") %>%
-  summarize(attacks = n()) %>%
-  ggplot(aes(x=Year, y=attacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink") + labs(title = "Number of Attacks throughout Time in 6 different countries", x = "Year", y ="Total number of Attacks")
 
-countryThroughTimeScaled<- shark_data %>%
-  group_by(Year, Country) %>%
-  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "PAPA NEW GUINEA" | Country == "BAHAMAS") %>%
-  summarize(attacks = n()) %>%
-  ggplot(aes(x=Year, y=attacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ ., scales="free") + geom_smooth(method = lm, color = "pink") + labs(title = "Number of Attacks throughout Time in 6 different countries", x = "Year", y ="Total number of Attacks")
-
-
-countryThroughTime
-countryThroughTimeScaled
 ```
   
     
 4. Why is the USA so high? Mean # of attacks, SD, Analyze how time affects the USA. 
 
 
+
+
 5. What is another potential cause in the large amount of attacks in the USA? Could it be based on the activity that was performed? 
 Which activity in the USA is the highest? 
-
 
 As we can tell from above, we notice that time DOES OR DOES NOT have an impact on the number of attacks that we have in the country. Is there another aspect that might have a strong correlation to causing a huge increase in the number of attacks? Will the type of activity that you are doing cause an effect on the number of attacks caused? Does activity have a positive correlation to the number of incidents? Seen below is the graph for the top 6 Activities that have caused an attack in the USA. The highest number of attacks is found when someone is surfing in the USA. Let's dive deeper into the surfing activity.
 ```{r}
@@ -121,7 +110,7 @@ activityAttacks
 6. Is this activity a huge issue in other countries?
 ```{r}
 
-dots <- aus_shark_data %>%
+dots <- shark_data%>%
   filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
   filter(Activity == "Surfing" | Activity == "Swimming" | Activity == "Unknown" | Activity == "Wading" | Activity == "Fishing" | Activity == "Standing") %>%
   ggplot(aes(x=Year,y=Activity, color = Country)) + geom_point()
@@ -153,71 +142,6 @@ dots
   
   
   
-  
-  
-  
-
-
-//Not sure what to do with this group of data just yet
-```{r}
-newData <- aus_shark_data %>%
-  group_by(Country) %>%
-  summarize(numOfAttacks = n()) %>%
-  arrange(desc(numOfAttacks)) %>%
-  head()
-
-newData
-
-f <- aus_shark_data %>%
-  group_by(Year, Country) %>%
-  filter(Country == "USA" | Country == "AUSTRALIA" | Country == "SOUTH AFRICA" | Country == "BRAZIL" | Country == "NEW ZEALAND" | Country == "BAHAMAS") %>%
-  summarize(attack = n()) %>%
-  mutate(totalValue = (Country == "USA")*1946 + 1096 * (Country == "AUSTRALIA") + 497 *(Country == "SOUTH AFRICA") + 98 * (Country == "BRAZIL") + 
-           87 * (Country == "NEW ZEALAND") + 84 * (Country =="BAHAMAS")) %>%
-  ggplot(aes(x=Year, y=attack/totalValue)) + geom_bar(stat = "identity", color = "black", fill = "navyblue")+ facet_grid(Country ~ .) + geom_smooth(method = lm, color = "pink")
-
-face # This is the graph we get after we just compare 
-f #This is the graph we get afteer dividing the year by the total number of attacks for a given country
-```
-
- 
-```{r}
-
-std_month <- aus_shark_data %>%
-  group_by(Year, Month) %>%
-  summarize(number = n()) %>% 
-  group_by(Month) %>%
-  summarize(n = mean(number)) %>%
-  ggplot(aes(x=Month, y = sd(n))) + geom_point()
-
-avg_month <- aus_shark_data %>%
-  group_by(Year, Month) %>%
-  summarize(number = n()) %>%
-  group_by(Month) %>%
-  summarize(n = mean(number)) %>%
-  ggplot(aes(x=Month, y = n, group = 1), levels = month.abb) + geom_point() + geom_line() +  scale_x_discrete(limits = month.abb)
-
-
-
-
-avg_month
-
-```
-  
-  
-  //This isnt too useful i dont think
-5. What month is the highest number of attacks in the USA?
-
-```{r}
-months <- aus_shark_data %>%
-  filter(Country == "USA") %>%
-  group_by(Month) %>%
-  summarize(numOfAttacks = n()) %>%
-  arrange(desc(Month)) %>%
-  ggplot(aes(x=Month, y=numOfAttacks)) + geom_bar(stat = "identity", color = "black", fill = "navyblue") 
-
-months
-```
   
   
   
